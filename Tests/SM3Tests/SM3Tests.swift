@@ -145,6 +145,55 @@ struct SM3Tests {
         let hash2 = SM3.hash(data: input)
         #expect(hash == hash2)
     }
+
+    @Test("Multi-block input (128 bytes / 2 blocks)")
+    func testMultiBlock() async throws {
+        // 128 bytes = exactly 2 blocks
+        let input = Data(repeating: 0xAB, count: 128)
+        let hash = SM3.hash(data: input)
+
+        #expect(hash.count == 32)
+
+        // Verify consistency
+        let hash2 = SM3.hash(data: input)
+        #expect(hash == hash2)
+    }
+
+    @Test("Multi-block with streaming (256 bytes / 4 blocks)")
+    func testMultiBlockStreaming() async throws {
+        let input = Data(repeating: 0xCD, count: 256)
+
+        // One-shot
+        let hashOneShot = SM3.hash(data: input)
+
+        // Streaming in 64-byte chunks
+        var hasher = SM3()
+        for i in stride(from: 0, to: 256, by: 64) {
+            hasher.update(data: input[i..<i+64])
+        }
+        let hashStreaming = hasher.finalize()
+
+        #expect(hashOneShot == hashStreaming)
+    }
+
+    @Test("Very large input (10MB)")
+    func testVeryLargeInput() async throws {
+        // Create 10MB of patterned data
+        let pattern = Data([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07])
+        var input = Data()
+        for _ in 0..<(10 * 1024 * 1024 / pattern.count) {
+            input.append(pattern)
+        }
+
+        let hash = SM3.hash(data: input)
+
+        #expect(hash.count == 32)
+        #expect(input.count == 10 * 1024 * 1024)
+
+        // Verify deterministic
+        let hash2 = SM3.hash(data: input)
+        #expect(hash == hash2)
+    }
 }
 
 // MARK: - Bit Operations Tests

@@ -133,8 +133,8 @@ H = V_n = (A||B||C||D||E||F||G||H)
 66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0
 ```
 
-### Test Vector 2: 512 repetitions of "abcd"
-**Input:** `"abcd"` repeated 512 times (2048 bytes)
+### Test Vector 2: 16 repetitions of "abcd"
+**Input:** `"abcd"` repeated 16 times (64 bytes)
 **Expected Output:**
 ```
 debe9ff92275b8a138604889c18e5a4d6fdb70e5387e5765293dcba39c0c5732

@@ -100,7 +100,10 @@ The implementation has been validated against official SM3 test vectors:
 - **Block Size**: 512 bits (64 bytes)
 - **Output Size**: 256 bits (32 bytes)
 - **Pure Swift**: No external dependencies
-- **Future**: SIMD optimization planned for 2-10x speedup
+- **Optimizations**: SIMD8 for W' generation where data dependencies allow
+- **Throughput**: ~120 MB/s for large data (see PERFORMANCE.md for details)
+
+See Benchmarks below
 
 ## Security
 
@@ -108,51 +111,6 @@ SM3 provides security comparable to SHA-256:
 - Current best cryptanalytic attacks reach ~31% of compression rounds for collisions
 - ~47% for preimage attacks
 - No practical attacks known against full SM3
-
-## Development
-
-### Building
-
-```bash
-swift build
-```
-
-### Testing
-
-```bash
-swift test
-```
-
-### Project Structure
-
-```
-SM3/
-├── Package.swift
-├── README.md
-├── CLAUDE.md                    # Implementation research & notes
-├── Sources/
-│   └── SM3/
-│       └── SM3.swift            # Core implementation
-└── Tests/
-    └── SM3Tests/
-        └── SM3Tests.swift       # Test suite
-```
-
-## Future Enhancements
-
-### Phase 2: SIMD Optimization
-
-Planned optimizations using Swift's native SIMD types:
-
-- **Message Expansion**: Process 4-8 W words in parallel using `SIMD4<UInt32>` or `SIMD8<UInt32>`
-- **W' Generation**: Compute W'[j] = W[j] ⊕ W[j+4] in parallel (8 XORs per instruction)
-- **Multi-Block Processing**: Process multiple independent blocks simultaneously
-
-**Expected Performance**: 40-100% improvement on Apple Silicon (NEON instructions)
-
-## License
-
-[Your License Here]
 
 ## References
 
@@ -173,3 +131,71 @@ Contributions are welcome! Please ensure:
 
 - Chinese National Cryptography Administration for the SM3 specification
 - Reference implementations: emmansun/gmsm (Go), Crypto++ (C++), and others
+
+## Benchmarks
+```
+swift run -c release sm3-benchmark
+Building for production...
+[1/1] Write swift-version--58304C5D6DBC2206.txt
+Build of product 'sm3-benchmark' complete! (0.12s)
+SM3 Performance Benchmark
+=========================
+System Information:
+  CPU: Apple M2 Max
+  Architecture: Apple Silicon (ARM64)
+  CPU Cores: 12
+  Max Frequency: Not available
+  Swift version: SM3Benchmark/main.swift
+
+Benchmarking: Tiny (64 bytes / 1 block)
+  Data size: 64 bytes
+  Iterations: 10000
+  Total time: 0.022s
+  Average: 0.002ms
+  Throughput: 29.12 MB/s
+
+Benchmarking: Small (1 KB)
+  Data size: 1024 bytes
+  Iterations: 1000
+  Total time: 0.011s
+  Average: 0.011ms
+  Throughput: 96.80 MB/s
+
+Benchmarking: Medium (64 KB)
+  Data size: 65536 bytes
+  Iterations: 100
+  Total time: 0.057s
+  Average: 0.566ms
+  Throughput: 115.88 MB/s
+
+Benchmarking: Large (1 MB)
+  Data size: 1048576 bytes
+  Iterations: 10
+  Total time: 0.089s
+  Average: 8.931ms
+  Throughput: 117.41 MB/s
+
+Benchmarking: XLarge (10 MB)
+  Data size: 10485760 bytes
+  Iterations: 3
+  Total time: 0.262s
+  Average: 87.424ms
+  Throughput: 119.94 MB/s
+
+==================================================
+SUMMARY
+==================================================
+
+System: Apple M2 Max
+Architecture: Apple Silicon (ARM64)
+CPU Cores: 12
+Implementation: SIMD-optimized (W' generation)
+
+Benchmark                             Throughput
+--------------------------------------------------
+Tiny (64 bytes / 1 block)             29.12 MB/s
+Small (1 KB)                          96.80 MB/s
+Medium (64 KB)                        115.88 MB/s
+Large (1 MB)                          117.41 MB/s
+```
+

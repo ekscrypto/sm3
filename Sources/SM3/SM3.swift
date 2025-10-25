@@ -20,15 +20,15 @@ public struct SM3 {
     ]
 
     /// Step constant T_j for rounds 0-15
-    private static let T0: UInt32 = 0x79cc4519
+    internal static let T0: UInt32 = 0x79cc4519
 
     /// Step constant T_j for rounds 16-63
-    private static let T16: UInt32 = 0x7a879d8a
+    internal static let T16: UInt32 = 0x7a879d8a
 
     // MARK: - State
 
     /// Current hash state (8 x 32-bit words)
-    private var state: [UInt32]
+    internal var state: [UInt32]
 
     /// Buffer for incomplete blocks
     private var buffer: Data
@@ -98,7 +98,7 @@ public struct SM3 {
     // MARK: - Block Processing
 
     /// Process a single 512-bit (64-byte) block
-    private mutating func processBlock(_ block: Data) {
+    internal mutating func processBlock(_ block: Data) {
         precondition(block.count == 64, "Block must be 64 bytes")
 
         // 1. Message Expansion
@@ -106,11 +106,9 @@ public struct SM3 {
         var WPrime = [UInt32](repeating: 0, count: 64)
 
         // Parse block into 16 big-endian 32-bit words
-        // Using withUnsafeBytes for better performance while maintaining safety
         block.withUnsafeBytes { bytes in
             for i in 0..<16 {
                 let offset = i * 4
-                // Load 4 bytes and interpret as big-endian UInt32
                 let word = UInt32(bytes[offset]) << 24 |
                           UInt32(bytes[offset + 1]) << 16 |
                           UInt32(bytes[offset + 2]) << 8 |
@@ -119,17 +117,11 @@ public struct SM3 {
             }
         }
 
-        // Expand W[16..67]
-        for j in 16..<68 {
-            let term1 = W[j - 16] ^ W[j - 9] ^ Self.rotateLeft(W[j - 3], by: 15)
-            let term2 = Self.P1(term1)
-            W[j] = term2 ^ Self.rotateLeft(W[j - 13], by: 7) ^ W[j - 6]
-        }
+        // Expand W[16..67] using SIMD8 for parallel processing
+        Self.expandMessageSIMD(W: &W)
 
-        // Generate W'[0..63]
-        for j in 0..<64 {
-            WPrime[j] = W[j] ^ W[j + 4]
-        }
+        // Generate W'[0..63] using SIMD8
+        Self.generateWPrimeSIMD(W: W, WPrime: &WPrime)
 
         // 2. Compression Function
         var A = state[0]
@@ -176,7 +168,7 @@ public struct SM3 {
 
     /// FF_j function - varies based on round j
     @inline(__always)
-    private static func FF(_ X: UInt32, _ Y: UInt32, _ Z: UInt32, j: Int) -> UInt32 {
+    internal static func FF(_ X: UInt32, _ Y: UInt32, _ Z: UInt32, j: Int) -> UInt32 {
         if j < 16 {
             return X ^ Y ^ Z
         } else {
@@ -186,7 +178,7 @@ public struct SM3 {
 
     /// GG_j function - varies based on round j
     @inline(__always)
-    private static func GG(_ X: UInt32, _ Y: UInt32, _ Z: UInt32, j: Int) -> UInt32 {
+    internal static func GG(_ X: UInt32, _ Y: UInt32, _ Z: UInt32, j: Int) -> UInt32 {
         if j < 16 {
             return X ^ Y ^ Z
         } else {
@@ -198,13 +190,13 @@ public struct SM3 {
 
     /// P0 permutation function
     @inline(__always)
-    private static func P0(_ X: UInt32) -> UInt32 {
+    internal static func P0(_ X: UInt32) -> UInt32 {
         return X ^ rotateLeft(X, by: 9) ^ rotateLeft(X, by: 17)
     }
 
     /// P1 permutation function
     @inline(__always)
-    private static func P1(_ X: UInt32) -> UInt32 {
+    internal static func P1(_ X: UInt32) -> UInt32 {
         return X ^ rotateLeft(X, by: 15) ^ rotateLeft(X, by: 23)
     }
 

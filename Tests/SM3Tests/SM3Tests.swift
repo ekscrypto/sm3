@@ -7,7 +7,7 @@ struct SM3Tests {
 
     // MARK: - Test Vector 1: "abc"
 
-    @Test("Hash of 'abc'")
+    @Test("Hash of abc")
     func testHashABC() async throws {
         let input = "abc".data(using: .utf8)!
         let expected = "66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0"
@@ -33,7 +33,7 @@ struct SM3Tests {
 
     // MARK: - Test Vector 3: "abcd" repeated 16 times
 
-    @Test("Hash of 'abcd' repeated 16 times")
+    @Test("Hash of abcd repeated 16 times")
     func testHashABCDRepeated() async throws {
         let input = String(repeating: "abcd", count: 16).data(using: .utf8)!
         let expected = "debe9ff92275b8a138604889c18e5a4d6fdb70e5387e5765293dcba39c0c5732"
@@ -46,7 +46,7 @@ struct SM3Tests {
 
     // MARK: - Test Vector 4: Sample Sentence
 
-    @Test("Hash of 'Yoda said, Do or do not. There is not try.'")
+    @Test("Hash of Yoda quote")
     func testHashYodaQuote() async throws {
         let input = "Yoda said, Do or do not. There is not try.".data(using: .utf8)!
         let expected = "6bb5ff84416dc1edf21c7b0c36d7adfdebe9378702a8982dd6ff0842188b67a5"
@@ -133,7 +133,7 @@ struct SM3Tests {
         #expect(hash1 != hash2)
     }
 
-    @Test("Large input (1MB)")
+    @Test("Large input - 1MB")
     func testLargeInput() async throws {
         // Create 1MB of data
         let input = Data(repeating: 0x42, count: 1024 * 1024)
@@ -146,7 +146,7 @@ struct SM3Tests {
         #expect(hash == hash2)
     }
 
-    @Test("Multi-block input (128 bytes / 2 blocks)")
+    @Test("Multi-block input - 128 bytes with 2 blocks")
     func testMultiBlock() async throws {
         // 128 bytes = exactly 2 blocks
         let input = Data(repeating: 0xAB, count: 128)
@@ -159,7 +159,7 @@ struct SM3Tests {
         #expect(hash == hash2)
     }
 
-    @Test("Multi-block with streaming (256 bytes / 4 blocks)")
+    @Test("Multi-block with streaming - 256 bytes with 4 blocks")
     func testMultiBlockStreaming() async throws {
         let input = Data(repeating: 0xCD, count: 256)
 
@@ -176,7 +176,7 @@ struct SM3Tests {
         #expect(hashOneShot == hashStreaming)
     }
 
-    @Test("Very large input (10MB)")
+    @Test("Very large input - 10MB")
     func testVeryLargeInput() async throws {
         // Create 10MB of patterned data
         let pattern = Data([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07])
@@ -271,7 +271,7 @@ struct SM3PaddingTests {
         #expect(lastEight.allSatisfy { $0 == 0 })
     }
 
-    @Test("Padding for 'abc'")
+    @Test("Padding for abc")
     func testPaddingABC() {
         let input = "abc".data(using: .utf8)!
         let padded = SM3.pad(message: input)

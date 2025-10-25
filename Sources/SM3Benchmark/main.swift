@@ -1,9 +1,72 @@
 import SM3
 import Foundation
+import Darwin
+
+// MARK: - System Information
+
+struct SystemInfo {
+    static func getCPUInfo() -> (String, String) {
+        var size: size_t = 0
+        
+        // Get CPU brand string
+        sysctlbyname("machdep.cpu.brand_string", nil, &size, nil, 0)
+        var cpuBrand = [CChar](repeating: 0, count: size)
+        sysctlbyname("machdep.cpu.brand_string", &cpuBrand, &size, nil, 0)
+        let brandString = String(cString: cpuBrand).trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Get CPU architecture
+        var cpuType: cpu_type_t = 0
+        size = MemoryLayout<cpu_type_t>.size
+        sysctlbyname("hw.cputype", &cpuType, &size, nil, 0)
+        
+        let architecture: String
+        switch cpuType {
+        case CPU_TYPE_ARM64:
+            architecture = "Apple Silicon (ARM64)"
+        case CPU_TYPE_X86_64:
+            architecture = "Intel (x86_64)"
+        default:
+            architecture = "Unknown (\(cpuType))"
+        }
+        
+        return (brandString, architecture)
+    }
+    
+    static func getSystemSpecs() -> (Int, Double) {
+        var size: size_t = 0
+        
+        // Get CPU count
+        var cpuCount: Int32 = 0
+        size = MemoryLayout<Int32>.size
+        sysctlbyname("hw.ncpu", &cpuCount, &size, nil, 0)
+        
+        // Get CPU frequency (in Hz)
+        var cpuFreq: UInt64 = 0
+        size = MemoryLayout<UInt64>.size
+        sysctlbyname("hw.cpufrequency_max", &cpuFreq, &size, nil, 0)
+        let cpuFreqGHz = Double(cpuFreq) / 1_000_000_000.0
+        
+        return (Int(cpuCount), cpuFreqGHz)
+    }
+}
 
 print("SM3 Performance Benchmark")
 print("=========================")
-print("Swift version: \(#file)")
+
+// Display system information
+let (cpuBrand, architecture) = SystemInfo.getCPUInfo()
+let (cpuCount, cpuFreq) = SystemInfo.getSystemSpecs()
+
+print("System Information:")
+print("  CPU: \(cpuBrand)")
+print("  Architecture: \(architecture)")
+print("  CPU Cores: \(cpuCount)")
+if cpuFreq > 0 {
+    print("  Max Frequency: \(String(format: "%.2f", cpuFreq)) GHz")
+} else {
+    print("  Max Frequency: Not available")
+}
+print("  Swift version: \(#file)")
 print()
 
 struct BenchmarkResult {
@@ -76,7 +139,13 @@ print(String(repeating: "=", count: 50))
 print("SUMMARY")
 print(String(repeating: "=", count: 50))
 print()
-print("Implementation: Scalar (baseline)")
+print("System: \(cpuBrand)")
+print("Architecture: \(architecture)")
+print("CPU Cores: \(cpuCount)")
+if cpuFreq > 0 {
+    print("Max Frequency: \(String(format: "%.2f", cpuFreq)) GHz")
+}
+print("Implementation: SIMD-optimized (W' generation)")
 print()
 print("Benchmark".padding(toLength: 35, withPad: " ", startingAt: 0) + "   Throughput")
 print(String(repeating: "-", count: 50))
@@ -88,5 +157,5 @@ for result in results {
 }
 
 print()
-print("Baseline benchmark complete!")
-print("Save these results for comparison with SIMD implementation.")
+print("SM3 benchmark complete!")
+print("Note: W' generation uses SIMD8 optimization, W expansion is scalar due to data dependencies.")

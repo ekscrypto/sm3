@@ -19,7 +19,6 @@ SM3 is a cryptographic hash function published by the Chinese National Cryptogra
 - ✅ Comprehensive test coverage with official test vectors
 - ✅ Both one-shot and streaming APIs
 - ✅ Optimized bit operations
-- ✅ Ready for SIMD optimization
 
 ## Installation
 
